@@ -1,6 +1,6 @@
 [package]
 name = "wall-echain"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Link <link.messagebox@gmail.com>"]
 description = "Wall-Echain is a product for obtaining block information, transaction details, and the latest block height of the Ethereum system through JSON-RPC."

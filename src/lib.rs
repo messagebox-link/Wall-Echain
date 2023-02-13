@@ -8,6 +8,7 @@ mod http;
 pub mod types;
 mod utils;
 
+#[derive(Debug, Clone)]
 pub struct Wall {
     /// RPC Server URLs
     pub urls: Vec<String>,

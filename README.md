@@ -20,7 +20,7 @@ Wall-Echain is a product for obtaining block information, transaction details, a
      ```toml
      # Cargo.toml
      [dependencies]
-     wall-echain = "0.1.0"
+     wall-echain = "0.1.1"
      ```
   2. Cargo add
      ```shell
@@ -29,7 +29,7 @@ Wall-Echain is a product for obtaining block information, transaction details, a
 - Next, you can use the following code to query the latest block height on the ethereum blockchain.
 
   ```rust
-  let w = wall::new(Vec["https://cloudflare-eth.com/".to_string()],None, None);
+  let w = Wall::new(Vec["https://cloudflare-eth.com/".to_string()],None, None);
   if let Some(t) = w.get_latest_number().await {
     println!("{:?}", t);
   }
@@ -40,7 +40,7 @@ Wall-Echain is a product for obtaining block information, transaction details, a
 
   ```rust
 
-  let w = wall::new(Vec["https://cloudflare-eth.com/".to_string()],None, None);
+  let w = Wall::new(Vec["https://cloudflare-eth.com/".to_string()],None, None);
   if let Some(t) = w.get_transaction_receipt_for_hash("0x80fdaa7f5f54cbe28b84f41afb9543cf0c9eb0d9f4b8a620c2fb5faf0b1c2810").await {
     println!("{:?}", t);
   }
@@ -50,7 +50,7 @@ Wall-Echain is a product for obtaining block information, transaction details, a
 - You can also use the following code to query block information by specifying the block height.
 
   ```rust
-  let w = wall::new(Vec["https://cloudflare-eth.com/".to_string()],None, None);
+  let w = Wall::new(Vec["https://cloudflare-eth.com/".to_string()],None, None);
   if let Some(t) = w.get_transactions_for_block("0xe5b544", false).await {
     println!("{:?}", t);
   }
