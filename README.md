@@ -20,7 +20,7 @@ Wall-Echain is a product for obtaining block information, transaction details, a
      ```toml
      # Cargo.toml
      [dependencies]
-     wall-echain = "0.1.1"
+     wall-echain = "0.1.2"
      ```
   2. Cargo add
      ```shell
