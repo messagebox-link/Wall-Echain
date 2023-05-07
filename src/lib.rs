@@ -47,6 +47,41 @@ impl Wall {
         .await
     }
 
+    pub async fn get_logs(
+        &self,
+        from_block: Option<String>,
+        to_block: Option<String>,
+        address: Option<Vec<String>>,
+        topics: Option<Vec<String>>,
+    ) -> Option<JsonRpc> {
+        let mut params = serde_json::Map::new();
+
+        if let Some(from_block) = from_block {
+            params.insert("fromBlock".to_string(), Value::String(from_block));
+        }
+
+        if let Some(to_block) = to_block {
+            params.insert("toBlock".to_string(), Value::String(to_block));
+        }
+
+        if let Some(address) = address {
+            params.insert(
+                "address".to_string(),
+                Value::Array(address.into_iter().map(Value::String).collect()),
+            );
+        }
+
+        if let Some(topics) = topics {
+            params.insert(
+                "topics".to_string(),
+                Value::Array(topics.into_iter().map(Value::String).collect()),
+            );
+        }
+
+        self.send_rpc_request("eth_getLogs", vec![Value::Object(params)])
+            .await
+    }
+
     async fn send_rpc_request(&self, method: &str, params: Vec<Value>) -> Option<JsonRpc> {
         let query = JsonRpcRequest {
             method: method.to_string(),
@@ -67,9 +102,9 @@ mod tests {
     fn init() -> Wall {
         Wall::new(
             vec![
-                "https://cloudflare-eth.com/".to_string(),
+                // "https://cloudflare-eth.com/".to_string(),
                 // "https://eth.rpc.blxrbdn.com".to_string(),
-                // "https://rpc.builder0x69.io".to_string(),
+                "https://rpc.builder0x69.io".to_string(),
             ],
             None,
             None,
@@ -100,6 +135,10 @@ mod tests {
     async fn test_get_transactions_for_block_error() {
         let bs = init();
 
+        println!(
+            "{:?}",
+            bs.get_transactions_for_block("1233333", false).await
+        );
         assert_eq!(
             bs.get_transactions_for_block("1233333", false)
                 .await
@@ -144,5 +183,21 @@ mod tests {
             .result
             .is_some()
         );
+    }
+
+    #[async_std::test]
+    async fn test_get_logs() {
+        let bs = init();
+        assert_eq!(
+            true,
+            bs.get_logs(
+                Some("0x1068F10".to_string()),
+                Some("0x1068F11".to_string()),
+                Some(vec!["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_owned()]),
+                None
+            )
+            .await
+            .is_some()
+        )
     }
 }

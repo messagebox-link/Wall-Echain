@@ -16,16 +16,31 @@ pub struct JsonRpcRequest {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum JsonResult {
+    /// String
     String(String),
+    /// JsonResult
     JsonRpcResult(JsonRpcResult),
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum TransactionResult {
+    /// String
     String(String),
+    /// Transaction
     Transaction(Transaction),
 }
+
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum ResultJson {
+    /// JsonResult
+    JsonResult(JsonResult),
+    /// LogsFilter
+    LogsFilter(Vec<LogsFilter>)
+}
+
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct JsonRpc {
@@ -35,7 +50,7 @@ pub struct JsonRpc {
     /// Chain Id
     pub id: String,
     /// Json RPC Results
-    pub result: Option<JsonResult>,
+    pub result: Option<ResultJson>,
     /// Json RPC Result Error
     pub error: Option<String>,
 }
@@ -213,4 +228,31 @@ pub struct AccessList {
     /// storage Keys
     #[serde(rename = "storageKeys")]
     pub storage_keys: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct LogsFilter {
+    /// Address
+    pub address: Option<String>,
+    /// Topics
+    pub topics: Option<Vec<String>>,
+    /// Data
+    pub data: Option<String>,
+    /// Block Number
+    #[serde(rename="blockNumber")]
+    pub block_number: Option<String>,
+    /// transactionHash
+    #[serde(rename="transactionHash")]
+    pub transaction_hash: Option<String>,
+    /// transactionIndex
+    #[serde(rename="transactionIndex")]
+    pub transaction_index: Option<String>,
+    /// blockHash
+    #[serde(rename="blockHash")]
+    pub block_hash: Option<String>,
+    /// logIndex
+    #[serde(rename="logIndex")]
+    pub log_index: Option<String>,
+    /// Removed
+    pub removed: Option<bool>
 }
