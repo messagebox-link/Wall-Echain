@@ -1,8 +1,9 @@
 use log::debug;
 use serde_json::Value;
 use types::JsonRpc;
+use utils::convert_hex::num2hex;
 
-use crate::{http::http_send, types::JsonRpcRequest};
+use crate::{http::{http_send, http_send_batch}, types::JsonRpcRequest};
 
 mod http;
 pub mod types;
@@ -15,15 +16,15 @@ pub struct Wall {
     /// Re-try quest
     pub retry: u32,
     /// ChainId
-    pub id: String,
+    pub id: i32,
 }
 
 impl Wall {
-    pub fn new(urls: Vec<String>, retry: Option<u32>, id: Option<String>) -> Self {
+    pub fn new(urls: Vec<String>, retry: Option<u32>, id: Option<i32>) -> Self {
         Wall {
             urls,
             retry: retry.unwrap_or(3),
-            id: id.unwrap_or("1".to_string()),
+            id: id.unwrap_or(1),
         }
     }
 
@@ -83,10 +84,10 @@ impl Wall {
     }
 
     async fn send_rpc_request(&self, method: &str, params: Vec<Value>) -> Option<JsonRpc> {
-        let query = JsonRpcRequest {
+        let query: JsonRpcRequest = JsonRpcRequest {
             method: method.to_string(),
             params: Value::Array(params),
-            id: self.id.parse().unwrap(),
+            id: self.id,
             jsonrpc: "2.0".to_string(),
         };
 
@@ -94,6 +95,46 @@ impl Wall {
 
         http_send(self.urls.as_ref(), self.retry, query).await
     }
+
+    // ron add
+    pub async fn get_code_batch(&self, address_batch: Vec<String>, block: String) -> Option<Vec<JsonRpc>> {
+        let query_batch = (0..address_batch.len()).into_iter().map(|index|{
+            let address = address_batch[index].clone();
+            JsonRpcRequest {
+                method: "eth_getCode".to_string(),
+                params: Value::Array(vec![
+                    serde_json::Value::String(address), 
+                    serde_json::Value::String(block.clone())
+                ]),
+                id: index as i32,
+                jsonrpc: "2.0".to_string(),
+            }
+        }).collect::<Vec<_>>();
+        http_send_batch(self.urls.as_ref(), self.retry, query_batch).await
+    }
+
+    pub async fn get_transactions_for_block_batch(&self, block_hex_batch: Vec<String>, is_show: bool) -> Option<Vec<JsonRpc>> {
+        let query_batch = (0..block_hex_batch.len()).into_iter().map(|index|{
+            let block_hex = block_hex_batch[index].clone();
+            JsonRpcRequest {
+                method: "eth_getBlockByNumber".to_string(),
+                params: Value::Array(vec![
+                    serde_json::Value::String(block_hex), 
+                    serde_json::Value::Bool(is_show)
+                ]),
+                id: index as i32,
+                jsonrpc: "2.0".to_string(),
+            }
+        }).collect::<Vec<_>>();
+        http_send_batch(self.urls.as_ref(), self.retry, query_batch).await
+    }
+    pub async fn get_transactions_for_block_num_batch(&self, block_num_batch: Vec<i128>, is_show: bool) -> Option<Vec<JsonRpc>> {
+        let block_hex_batch = block_num_batch.into_iter().map(|block_num|{
+            num2hex(block_num)
+        }).collect::<Vec<_>>();
+       self.get_transactions_for_block_batch(block_hex_batch, is_show).await
+    }
+
 }
 
 #[cfg(test)]
@@ -102,9 +143,9 @@ mod tests {
     fn init() -> Wall {
         Wall::new(
             vec![
-                // "https://cloudflare-eth.com/".to_string(),
+                "https://cloudflare-eth.com/".to_string(),
                 // "https://eth.rpc.blxrbdn.com".to_string(),
-                "https://rpc.builder0x69.io".to_string(),
+                // "https://rpc.builder0x69.io".to_string(),
             ],
             None,
             None,
@@ -200,4 +241,62 @@ mod tests {
             .is_some()
         )
     }
+
 }
+
+// ron add 
+#[cfg(test)]
+mod ron_test {
+    use super::Wall;
+    fn init() -> Wall {
+        Wall::new(
+            vec![
+                "https://cloudflare-eth.com/".to_string(),
+                // "https://eth.rpc.blxrbdn.com".to_string(),
+                // "https://rpc.builder0x69.io".to_string(),
+            ],
+            None,
+            None,
+        )
+    }
+
+    #[async_std::test]
+    async fn test_get_code_batch() {
+        let bs = init();
+        let addr_batch = vec![
+            "0x1497dd518b392b26bcf799abd9943190aa1edbf2".to_string(),
+            "0x1497dd518b392b26bcf799abd9943190aa1edbf3".to_string(),
+            "0x1497dd518b392b26bcf799abd9943190aa1edbf4".to_string(),
+        ];
+        let block = String::from("latest");
+        let res = bs.get_code_batch(addr_batch, block).await;
+        assert_eq!(true, res.is_some());
+        // println!("res: {:#?}", res);
+    }
+
+    #[async_std::test]
+    async fn test_get_transactions_for_block_batch() {
+        let bs = init();
+        let block_hex_batch = vec![
+            "0x123432".to_string(),
+            "0x123433".to_string(),
+            "0x123434".to_string(),
+        ];
+        let is_show = false;
+        let res = bs.get_transactions_for_block_batch(block_hex_batch, is_show).await;
+        assert_eq!(true, res.is_some());
+        // println!("res: {:#?}", res);
+        let block_num_batch = (1700_0000..1700_0002).collect::<Vec<_>>();
+        let res = bs.get_transactions_for_block_num_batch(block_num_batch, is_show).await;
+        assert_eq!(true, res.is_some());
+        // println!("---res: {:#?}", res);
+
+    }
+}
+
+// ron change
+// 1、id type string => i32
+// 2、add http_send_batch
+// 3、add get_code_batch test_get_transactions_for_block_batch test_get_transactions_for_block_batch
+// 4、utils file to dict 
+// 5、add convert_hex、convert_address
