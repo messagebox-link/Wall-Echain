@@ -4,6 +4,9 @@ use regex::Regex;
 use std::num::ParseIntError;
 
 pub fn hex2num(hex: &str) -> Result<i128, ParseIntError> {
+    if hex=="0x"{
+        return Ok(0)
+    }
     let re = Regex::new("0x[0-9a-f]*").unwrap();
     let t = re.captures(hex).unwrap();
     let s = &t[0];
@@ -35,7 +38,7 @@ fn test() {
     let hex = num2hex(num);
     println!("{} num2hex => {:?}", num, hex);
 
-    let hex = "0xe".to_string();
+    let hex = "0x".to_string();
     let num = hex2num(&hex).unwrap();
     println!("{} hex2num => {:?}", hex, num);
 
