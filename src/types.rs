@@ -8,7 +8,7 @@ pub struct JsonRpcRequest {
     /// Params
     pub params: Value,
     /// Id
-    pub id: String,
+    pub id: i32,
     /// JsonRpc
     pub jsonrpc: String,
 }
@@ -48,7 +48,7 @@ pub struct JsonRpc {
     #[serde(rename = "jsonrpc")]
     pub json_rpc: String,
     /// Chain Id
-    pub id: String,
+    pub id: i32,
     /// Json RPC Results
     pub result: Option<ResultJson>,
     /// Json RPC Result Error
